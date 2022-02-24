@@ -97,26 +97,51 @@ public class JpaMain {
 //            MemberDTO memberDTO = result.get(0);
 //            System.out.println("username = " + memberDTO.getUsername());
 //            System.out.println("age = " + memberDTO.getAge());
-            for (int i = 0; i < 100; i++) {
-                Member member = new Member();
-                member.setUsername("member" + i);
-                member.setAge(i);
-                em.persist(member);
-            }
+//            for (int i = 0; i < 100; i++) {
+//                Member member = new Member();
+//                member.setUsername("member" + i);
+//                member.setAge(i);
+//                em.persist(member);
+//            }
+//
+//
+//            em.flush();
+//            em.clear();
+//
+//            List<Member> result = em.createQuery("select m from Member m order by m.age desc", Member.class)
+//                    .setFirstResult(1)
+//                    .setMaxResults(10)
+//                    .getResultList();
+//
+//            System.out.println("result.size = " + result.size());
+//            for (Member member1 : result) {
+//                System.out.println("member1 = " + member1);
+//            }
+            /**
+             * 조인:
+             * 내부조인
+             * - select m from Member m [INNER] JOIN m.team t
+             * 외부조인
+             * - select m from Member m LEFT [OUTER] JOIN m.team t
+             * 세타조인
+             * - select count(m) from Member m, Team t where m.username = t.name
+             */
+            Team team = new Team();
+            team.setName("teamA");
+            em.persist(team);
 
+            Member member = new Member();
+            member.setUsername("member1");
+            member.setAge(10);
 
-            em.flush();
-            em.clear();
+            member.setTeam(team);
 
-            List<Member> result = em.createQuery("select m from Member m order by m.age desc", Member.class)
-                    .setFirstResult(1)
-                    .setMaxResults(10)
+            em.persist(member);
+
+            String query = "select m from Member m inner join m.team t";
+            List<Member> result = em.createQuery(query, Member.class)
                     .getResultList();
 
-            System.out.println("result.size = " + result.size());
-            for (Member member1 : result) {
-                System.out.println("member1 = " + member1);
-            }
             tx.commit();
         } catch (Exception e) {
             tx.rollback();
