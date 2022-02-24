@@ -50,10 +50,10 @@ public class JpaMain {
                 select m.username, m.age from Member m - 스칼라 타입 프로젝션
                 DISTINCT로 중복 제거
              */
-            Member member = new Member();
-            member.setUsername("member1");
-            member.setAge(10);
-            em.persist(member);
+//            Member member = new Member();
+//            member.setUsername("member1");
+//            member.setAge(10);
+//            em.persist(member);
 
 //            //엔티티 프로젝션을 한 List에 반환되는 Member대상들은 모두 영속성컨텍스트에서 다 관리된다
 //            List<Member> result = em.createQuery("select m from Member m", Member.class)
@@ -91,13 +91,32 @@ public class JpaMain {
 //            System.out.println("age = " +result[1]);
 
             // 3. new 명령어로 조회
-            List<MemberDTO> result = em.createQuery("select new jpql.MemberDTO(m.username, m.age) from Member m", MemberDTO.class)
+//            List<MemberDTO> result = em.createQuery("select new jpql.MemberDTO(m.username, m.age) from Member m", MemberDTO.class)
+//                    .getResultList();
+//
+//            MemberDTO memberDTO = result.get(0);
+//            System.out.println("username = " + memberDTO.getUsername());
+//            System.out.println("age = " + memberDTO.getAge());
+            for (int i = 0; i < 100; i++) {
+                Member member = new Member();
+                member.setUsername("member" + i);
+                member.setAge(i);
+                em.persist(member);
+            }
+
+
+            em.flush();
+            em.clear();
+
+            List<Member> result = em.createQuery("select m from Member m order by m.age desc", Member.class)
+                    .setFirstResult(1)
+                    .setMaxResults(10)
                     .getResultList();
 
-            MemberDTO memberDTO = result.get(0);
-            System.out.println("username = " + memberDTO.getUsername());
-            System.out.println("age = " + memberDTO.getAge());
-
+            System.out.println("result.size = " + result.size());
+            for (Member member1 : result) {
+                System.out.println("member1 = " + member1);
+            }
             tx.commit();
         } catch (Exception e) {
             tx.rollback();
