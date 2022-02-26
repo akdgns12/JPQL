@@ -117,30 +117,50 @@ public class JpaMain {
 //            for (Member member1 : result) {
 //                System.out.println("member1 = " + member1);
 //            }
-            /**
-             * 조인:
-             * 내부조인
-             * - select m from Member m [INNER] JOIN m.team t
-             * 외부조인
-             * - select m from Member m LEFT [OUTER] JOIN m.team t
-             * 세타조인
-             * - select count(m) from Member m, Team t where m.username = t.name
-             */
+//            /**
+//             * 조인:
+//             * 내부조인
+//             * - select m from Member m [INNER] JOIN m.team t
+//             * 외부조인
+//             * - select m from Member m LEFT [OUTER] JOIN m.team t
+//             * 세타조인
+//             * - select count(m) from Member m, Team t where m.username = t.name
+//             */
             Team team = new Team();
             team.setName("teamA");
             em.persist(team);
 
             Member member = new Member();
-            member.setUsername("member1");
+            member.setUsername(null);
             member.setAge(10);
 
             member.setTeam(team);
 
             em.persist(member);
 
-            String query = "select m from Member m inner join m.team t";
-            List<Member> result = em.createQuery(query, Member.class)
+            em.flush();
+            em.clear();
+
+//            /**
+//             *  조건식 - CASE식
+//             *  기본CASE, 단순CASE식
+//             *  COALESCE : 하나씩 조회해서 null이 아니면 반환
+//             *  select coalesce(m.username, '이름 없는 회원') from Member m
+//             *  NULLIF : 두 값이 같으면 null 반환, 다르면 첫번째 값 반환
+//             *  select NULLIF(m.username, '관리자') from Member m
+//             */
+            String query =
+                    "select coalesce(m.username, '이름 없는 회원') from Member m ";
+            List<String> result = em.createQuery(query, String.class)
                     .getResultList();
+
+            for (String s : result) {
+                System.out.println("s = " + s);
+            }
+
+//            String query = "select m from Member m inner join m.team t";
+//            List<Member> result = em.createQuery(query, Member.class)
+//                    .getResultList();
 
             tx.commit();
         } catch (Exception e) {
