@@ -149,8 +149,10 @@ public class JpaMain {
 //             *  NULLIF : 두 값이 같으면 null 반환, 다르면 첫번째 값 반환
 //             *  select NULLIF(m.username, '관리자') from Member m
 //             */
+            // 사용자 정의 함수 호출 예시
             String query =
-                    "select coalesce(m.username, '이름 없는 회원') from Member m ";
+                    "select function('group_concat', m.username) from Member m";
+
             List<String> result = em.createQuery(query, String.class)
                     .getResultList();
 
