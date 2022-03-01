@@ -126,20 +126,6 @@ public class JpaMain {
 //             * 세타조인
 //             * - select count(m) from Member m, Team t where m.username = t.name
 //             */
-            Team team = new Team();
-            team.setName("teamA");
-            em.persist(team);
-
-            Member member = new Member();
-            member.setUsername(null);
-            member.setAge(10);
-
-            member.setTeam(team);
-
-            em.persist(member);
-
-            em.flush();
-            em.clear();
 
 //            /**
 //             *  조건식 - CASE식
@@ -150,19 +136,82 @@ public class JpaMain {
 //             *  select NULLIF(m.username, '관리자') from Member m
 //             */
             // 사용자 정의 함수 호출 예시
-            String query =
-                    "select function('group_concat', m.username) from Member m";
-
-            List<String> result = em.createQuery(query, String.class)
-                    .getResultList();
-
-            for (String s : result) {
-                System.out.println("s = " + s);
-            }
+//            String query =
+//                    "select function('group_concat', m.username) from Member m";
+//
+//            List<String> result = em.createQuery(query, String.class)
+//                    .getResultList();
+//
+//            for (String s : result) {
+//                System.out.println("s = " + s);
+//            }
 
 //            String query = "select m from Member m inner join m.team t";
 //            List<Member> result = em.createQuery(query, Member.class)
 //                    .getResultList();
+
+            /**
+             * 경로 표현식
+             * 묵시적 조인 사용(X) 웬만하면 명시적 조인 사용하자!
+             *
+             * 명시적 조인 : join키워드 직접 사용
+             *  select m from Member m join m.team t
+             *
+             * 묵시적 조인 : 경로 표현식에 의해 묵시적으로 SQL 발생(내부 조인만 가능)
+             *  select m.team from Member m
+             */
+
+            /**
+             * **실무에서 매우 중요**
+             * JPQL - 페치조인(fetch join)
+             * - SQL 조인 종류 X
+             * - JPQL에서 성능 최적화를 위해 제공하는 기능
+             * - 연관된 엔티티나 컬렉션을 SQL 한 번에 함께 조회하는 기능
+             * - join fetch 명령어 사용
+             * - 페치 조인 ::= [LEFT [OUTER] | INNER] JOIN FETCH 조인경로
+             */
+            Team teamA = new Team();
+            teamA.setName("팀A");
+            em.persist(teamA);
+
+            Team teamB = new Team();
+            teamB.setName("팀B");
+            em.persist(teamB);
+
+            Member member1 = new Member();
+            member1.setUsername("회원1");
+            member1.setTeam(teamA);
+            em.persist(member1);
+
+            Member member2 = new Member();
+            member2.setUsername("회원2");
+            member2.setTeam(teamA);
+            em.persist(member2);
+
+            Member member3 = new Member();
+            member3.setUsername("회원3");
+            member3.setTeam(teamB);
+            em.persist(member3);
+
+            em.flush();
+            em.clear();
+
+//            String query = "select m from Member m";
+            String query = "select m from Member m join fetch m.team";
+            List<Member> result = em.createQuery(query, Member.class)
+                            .getResultList();
+
+            for (Member member : result) {
+                System.out.println("member = " + member.getUsername() + ", " + member.getTeam().getName());
+                // 회원1, 팀A를 영속성컨텍스트에 없기 때문에 쿼리를 날려서 영속성컨텍스트에 올리고 결과를 반환 SQL로 가져온다(영속성 컨텍스트에 없기 떄문에)
+                // 회원2, 팀A를 영속성컨텍스트에서 가져옴
+                // 회원3, 팀B가 영속성컨텍스트에 없기 때문에 쿼리를 날려서 영속성컨텍스트에 올리고 결과를 반환
+
+                // 회원 100명 -> N + 1 문제가 발생  --> 그래서 fetch join을 사용
+                // 한방 쿼리인 fetch join으로 가져오면 프록시가 아닌 진짜 데이터인 Team을 가져오기때문에
+                // 쿼리가 한 번으로 모두 조회할 수 있게 된다
+            }
+
 
             tx.commit();
         } catch (Exception e) {
